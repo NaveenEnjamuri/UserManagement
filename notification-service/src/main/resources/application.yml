@@ -1,0 +1,53 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: notification-service
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: naveen.enjamuri22902@gmail.com
+    password: ytea rgbn ydhj rxpj
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+
+
+#server:
+#  port: 8082
+#
+#spring:
+#  application:
+#    name: notification-service
+#
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: your.email@gmail.com
+#    password: your-app-password
+#    properties:
+#      mail.smtp.auth: true
+#      mail.smtp.starttls.enable: true
+#
+#rabbitmq:
+#  queue: notification-queue
+#  exchange: notification-exchange
+#  routingKey: notification-routing-key
+#
+#spring.rabbitmq:
+#  host: localhost
+#  port: 5672
+#  username: guest
+#  password: guest

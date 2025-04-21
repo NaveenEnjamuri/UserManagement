@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: userservice_db
+#      MYSQL_USER: user
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend
+
+  redis:
+    image: redis:6
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_container
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - backend
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  backend:
+
+
+
+
+
+
+
+#version: '3.8'
+#services:
+#
+#  mysql:
+#    image: mysql:8
+#    container_name: mysql_container
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: userservice_db
+#      MYSQL_USER: user
+#      MYSQL_PASSWORD: 1234
+#    ports:
+#      - "3306:3306"
+#    networks:
+#      - usernet
+#
+#  redis:
+#    image: redis:6.2
+#    container_name: redis_container
+#    restart: always
+#    ports:
+#      - "6379:6379"
+#    networks:
+#      - usernet
+#
+#  rabbitmq:
+#    image: rabbitmq:3-management
+#    container_name: rabbitmq_container
+#    restart: always
+#    ports:
+#      - "5672:5672"     # RabbitMQ broker port
+#      - "15672:15672"   # RabbitMQ management UI
+#    environment:
+#      RABBITMQ_DEFAULT_USER: guest
+#      RABBITMQ_DEFAULT_PASS: guest
+#    networks:
+#      - usernet
+#
+#networks:
+#  usernet:
+#    driver: bridge
