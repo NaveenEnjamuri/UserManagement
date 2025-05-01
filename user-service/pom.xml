@@ -1,52 +1,66 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.userservice</groupId>
-    <artifactId>user-service</artifactId>
-    <version>1.0.0</version>
-    <packaging>jar</packaging>
-    <name>User Service</name>
-
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.1.RELEASE</version>
-        <relativePath/>
+        <groupId>com.usermanagement</groupId>
+        <artifactId>UserManagement</artifactId>
+        <version>1.0.0</version>
     </parent>
 
+    <artifactId>user-service</artifactId>
+    <name>User Service</name>
+<!--    <properties>-->
+<!--        <java.version>1.8</java.version>-->
+<!--        <spring.boot.version>2.3.1.RELEASE</spring.boot.version>-->
+<!--    </properties>-->
+
     <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <java.version>1.8</java.version>
-        <springfox.version>2.9.2</springfox.version>
+        <spring.boot.version>2.3.1.RELEASE</spring.boot.version>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Starters -->
+        <!-- Spring Boot Essentials -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        
+
+        <!-- Spring Security -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-security</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+            <version>2.3.1.RELEASE</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.9.1</version>
+        </dependency>
+
+
+
+        <!-- JPA + MySQL -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-
-        <!-- MySQL -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
-        <!-- RabbitMQ (AMQP) -->
+        <!-- RabbitMQ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
@@ -58,29 +72,57 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-        <!-- Swagger 2 -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>2.4.4</version>
+        </dependency>
+
+
+        <!-- Swagger 2.9.2 -->
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
-            <version>${springfox.version}</version>
+            <version>2.9.2</version>
+<!--            <version>${springfox.version}</version>-->
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
-            <version>${springfox.version}</version>
+            <version>2.9.2</version>
+<!--            <version>${springfox.version}</version>-->
         </dependency>
 
         <!-- Lombok -->
+<!--        <dependency>-->
+<!--            <groupId>org.projectlombok</groupId>-->
+<!--            <artifactId>lombok</artifactId>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>1.18.26</version> <!-- ✅ Make sure version is latest -->
+            <scope>provided</scope>
         </dependency>
+
 
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- Devtools (Optional) -->
@@ -96,28 +138,150 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.vintage</groupId>
-                    <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
+
 </project>
+
+
+
+
+
+        <!--<project xmlns="http://maven.apache.org/POM/4.0.0"-->
+<!--         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"-->
+<!--         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0-->
+<!--                             http://maven.apache.org/xsd/maven-4.0.0.xsd">-->
+
+<!--    <modelVersion>4.0.0</modelVersion>-->
+<!--    <parent>-->
+<!--        <groupId>com.usermanagement</groupId>-->
+<!--        <artifactId>UserManagement</artifactId>-->
+<!--        <version>1.0.0</version>-->
+<!--    </parent>-->
+<!--    <artifactId>user-service</artifactId>-->
+<!--&lt;!&ndash;    <groupId>com.userservice</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;    <artifactId>user-service</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;    <version>1.0.0</version>&ndash;&gt;-->
+<!--&lt;!&ndash;    <packaging>jar</packaging>&ndash;&gt;-->
+<!--&lt;!&ndash;    <name>User Service</name>&ndash;&gt;-->
+<!--&lt;!&ndash;    <artifactId>user-service</artifactId>&ndash;&gt;-->
+
+<!--&lt;!&ndash;    <parent>&ndash;&gt;-->
+<!--&lt;!&ndash;        <groupId>org.springframework.boot</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;        <artifactId>spring-boot-starter-parent</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;        <version>2.3.1.RELEASE</version>&ndash;&gt;-->
+<!--&lt;!&ndash;        <relativePath/>&ndash;&gt;-->
+<!--&lt;!&ndash;    </parent>&ndash;&gt;-->
+
+<!--&lt;!&ndash;    <properties>&ndash;&gt;-->
+<!--&lt;!&ndash;        <java.version>1.8</java.version>&ndash;&gt;-->
+<!--&lt;!&ndash;        <springfox.version>2.9.2</springfox.version>&ndash;&gt;-->
+<!--&lt;!&ndash;    </properties>&ndash;&gt;-->
+
+<!--    <dependencies>-->
+<!--        &lt;!&ndash; Spring Boot Starters &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-web</artifactId>-->
+<!--        </dependency>-->
+<!--        -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-security</artifactId>-->
+<!--        </dependency>-->
+<!--        -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-data-jpa</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; MySQL &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>mysql</groupId>-->
+<!--            <artifactId>mysql-connector-java</artifactId>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; RabbitMQ (AMQP) &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-amqp</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Redis &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Swagger 2 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>io.springfox</groupId>-->
+<!--            <artifactId>springfox-swagger2</artifactId>-->
+<!--            <version>${springfox.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.springfox</groupId>-->
+<!--            <artifactId>springfox-swagger-ui</artifactId>-->
+<!--            <version>${springfox.version}</version>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Lombok &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.projectlombok</groupId>-->
+<!--            <artifactId>lombok</artifactId>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Validation &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-validation</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Devtools (Optional) &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-devtools</artifactId>-->
+<!--            <scope>runtime</scope>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Actuator (Optional) &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; Test &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-test</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.junit.vintage</groupId>-->
+<!--                    <artifactId>junit-vintage-engine</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+<!--    </dependencies>-->
+
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            &lt;!&ndash; Spring Boot Maven Plugin &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
+<!--</project>-->

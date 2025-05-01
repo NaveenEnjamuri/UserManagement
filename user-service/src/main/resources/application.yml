@@ -2,43 +2,86 @@ server:
   port: 8081
 
 spring:
-  application:
-    name: user-service
-
   datasource:
-#    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&serverTimezone=UTC
-    url: jdbc:mysql://localhost:3306/userservice_db
-    username: user
-    password: 1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
+    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 1230
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
-
   redis:
     host: localhost
     port: 6379
-    timeout: 60000
-  session:
-    store-type: redis
-
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+#    exchange: mail.exchange
+#    routing-key: mail.routingKey
+  application:
+    name: user-service
+mail:
+  exchange: notification.exchange
+  routingKey: notification.routing.key
 
-# Swagger (optional title/description)
 swagger:
+  base-package: com.usermanagement
   title: User Service API
-  description: User management microservice with Spring Boot
+  description: REST API for managing users
   version: 1.0
 
-# Logging
 logging:
   level:
-    org.springframework: INFO
-    com.userservice: DEBUG
+    org.springframework.amqp: DEBUG
+    com.userservice.rabbitmq: DEBUG
+
+
+
+
+
+#server:
+#  port: 8081
+#
+#spring:
+#  application:
+#    name: user-service
+#
+#  datasource:
+##    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&serverTimezone=UTC
+#    url: jdbc:mysql://localhost:3306/userservice_db
+#    username: user
+#    password: 1234
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+#
+#  redis:
+#    host: localhost
+#    port: 6379
+#    timeout: 60000
+#  session:
+#    store-type: redis
+#
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: guest
+#    password: guest
+#
+## Swagger (optional title/description)
+#swagger:
+#  title: User Service API
+#  description: User management microservice with Spring Boot
+#  version: 1.0
+#
+## Logging
+#logging:
+#  level:
+#    org.springframework: INFO
+#    com.userservice: DEBUG

@@ -1,34 +1,28 @@
-package com.usermanagement.converter;
+package com.userservice.converter;
 
-import com.usermanagement.dto.RoleDTO;
-import com.usermanagement.entity.Role;
+import com.userservice.dto.RoleDTO;
+import com.userservice.entity.Role;
+import com.userservice.enums.RoleName;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+@Component
 public class RoleConverter {
 
-    public static RoleDTO toDTO(Role role) {
+    public RoleDTO toDTO(Role role) {
         if (role == null) return null;
+
         return RoleDTO.builder()
                 .id(role.getId())
-                .name(role.getName())
+                .name(role.getName().name()) // Enum to string
                 .build();
     }
 
-    public static Role toEntity(RoleDTO dto) {
+    public Role toEntity(RoleDTO dto) {
         if (dto == null) return null;
+
         return Role.builder()
                 .id(dto.getId())
-                .name(dto.getName())
+                .name(RoleName.valueOf(dto.getName())) // String to Enum
                 .build();
-    }
-
-    public static List<RoleDTO> toDTOList(List<Role> roles) {
-        return roles == null ? null : roles.stream().map(RoleConverter::toDTO).collect(Collectors.toList());
-    }
-
-    public static List<Role> toEntityList(List<RoleDTO> dtos) {
-        return dtos == null ? null : dtos.stream().map(RoleConverter::toEntity).collect(Collectors.toList());
     }
 }

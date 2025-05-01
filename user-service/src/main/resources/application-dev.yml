@@ -1,0 +1,6 @@
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:mysql://localhost:3306/userdb?useSSL=false
+    username: root
+    password: 1230

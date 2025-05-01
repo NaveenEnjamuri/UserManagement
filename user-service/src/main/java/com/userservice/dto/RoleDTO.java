@@ -1,13 +1,13 @@
-// RoleDTO.java
-package com.usermanagement.dto;
+// --- 📁 dto/RoleDTO.java ---
+package com.userservice.dto;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class RoleDTO {
+    private Long id;
     private String name;
 }

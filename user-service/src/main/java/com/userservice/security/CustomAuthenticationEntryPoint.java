@@ -1,7 +1,7 @@
-package com.usermanagement.security;
+package com.userservice.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.usermanagement.exception.ApiError;
+import com.userservice.exception.ApiError;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;

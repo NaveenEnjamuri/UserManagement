@@ -1,4 +1,4 @@
-package com.usermanagement.payload;
+package com.userservice.payload;
 
 import lombok.Data;
 
