@@ -1,4 +1,4 @@
-package com.usermanagement.config;
+package com.userservice.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.context.annotation.Bean;

@@ -1,15 +1,20 @@
 package com.notificationservice.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.notificationservice.enums.MessageType;
+
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationRequest {
+@Builder // ✅ Add this line
+public class NotificationRequest implements Serializable {
     private String to;
     private String subject;
     private String body;
-    private String type; // Optional: verification, reset-password, etc.
+    private MessageType type; // Optional: verification, reset-password, etc.
 }

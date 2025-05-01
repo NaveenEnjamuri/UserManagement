@@ -1,97 +1,79 @@
-package com.usermanagement.service.impl;
+package com.userservice.service.impl;
 
-import com.usermanagement.dto.UserDTO;
-import com.usermanagement.entity.User;
-import com.usermanagement.exception.ApiException;
-import com.usermanagement.rabbitmq.RabbitMQPublisher;
-import com.usermanagement.repository.UserRepository;
-import com.usermanagement.service.IAuthService;
-import com.usermanagement.util.ModelMapperUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import com.userservice.dto.LoginResponseDTO;
+import com.userservice.entity.User;
+import com.userservice.exception.UserNotFoundException;
+import com.userservice.repository.UserRepository;
+import com.userservice.service.IAuthService;
+import com.userservice.service.JwtUserDetailsService;
+import com.userservice.security.JwtTokenUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.Optional;
-import java.util.UUID;
-
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements IAuthService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
-    @Autowired
-    private RabbitMQPublisher rabbitMQPublisher;
+    private final UserRepository userRepository;
+    private final JwtUserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtil jwtTokenUtil;
 
     @Override
-    public UserDTO login(String username, String password) {
+    public LoginResponseDTO login(String username, String password) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password));
-
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ApiException("User not found for login"));
 
-        return ModelMapperUtils.map(user, UserDTO.class);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        String token = jwtTokenUtil.generateToken(userDetails);
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+
+        return new LoginResponseDTO(token, username, role);
     }
 
     @Override
     public void logout() {
         SecurityContextHolder.clearContext();
-        // Additional logic for token/session invalidation can be added here if using JWT
-
-        // Clear session/token from Redis (if session-based or token-based approach is used)
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getName() != null) {
-            String key = "SESSION::" + auth.getName();
-            redisTemplate.delete(key);
-        }
     }
 
     @Override
     public String generateResetPasswordToken(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApiError("User not found with email: " + email));
-
-        String token = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("RESET_PASSWORD_TOKEN::" + token, email, 15, TimeUnit.MINUTES);
-
-        // Notify via email using RabbitMQ   // Publish to RabbitMQ to send email
-        rabbitMQPublisher.sendResetPasswordEmail(user.getEmail(), token);
-
-        return token;
-
+                .orElseThrow(() -> new UserNotFoundException("Email not registered."));
+        return "token-" + user.getId();
     }
 
+//    @Override
+//    public void changePassword(String username, String oldPassword, String newPassword) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("User not found."));
+//
+//        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+//            throw new IllegalArgumentException("Incorrect old password.");
+//        }
+//
+//        user.setPassword(passwordEncoder.encode(newPassword));
+//        userRepository.save(user);
+//    }
     @Override
     public void changePassword(String username, String oldPassword, String newPassword) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ApiError("User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new ApiError("Old password does not match");
+            throw new IllegalArgumentException("Incorrect old password");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-
-        // Notify via email using RabbitMQ      // Send confirmation email
-        rabbitMQPublisher.sendChangePasswordEmail(user.getEmail());
-
     }
-} 
+}

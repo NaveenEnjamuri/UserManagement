@@ -1,51 +1,122 @@
+# This file will contain the full docker-compose configuration
+#docker-compose.yml:
+
 version: '3.8'
 
 services:
-
-  mysql:
-    image: mysql:8
-    container_name: mysql_container
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: userservice_db
-#      MYSQL_USER: user
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 1234
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - backend
-
   redis:
-    image: redis:6
-    container_name: redis_container
+    image: redis:alpine
+    container_name: redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - backend
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq_container
+    container_name: rabbitmq
     ports:
       - "5672:5672"
-      - "15672:15672"  # Management UI
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-    networks:
-      - backend
 
-volumes:
-  mysql_data:
-  redis_data:
+  user-service:
+    build: ./user-service
+#    container_name: user-service
+    ports:
+#      - "8080:8080"
+      - "8081:8081"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - redis
+      - rabbitmq
 
-networks:
-  backend:
+  notification-service:
+    build: ./notification-service
+#    container_name: notification-service
+    ports:
+#      - "8081:8081"
+      - "8082:8082"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - rabbitmq
+      - redis
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#version: '3.8'
+#
+#services:
+#
+#  mysql:
+#    image: mysql:8
+#    container_name: mysql_container
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: userservice_db
+##      MYSQL_USER: user
+#      MYSQL_USER: root
+#      MYSQL_PASSWORD: 1234
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+#    networks:
+#      - backend
+#
+#  redis:
+#    image: redis:6
+#    container_name: redis_container
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+#    networks:
+#      - backend
+#
+#  rabbitmq:
+#    image: rabbitmq:3-management
+#    container_name: rabbitmq_container
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"  # Management UI
+#    environment:
+#      RABBITMQ_DEFAULT_USER: guest
+#      RABBITMQ_DEFAULT_PASS: guest
+#    networks:
+#      - backend
+#
+#volumes:
+#  mysql_data:
+#  redis_data:
+#
+#networks:
+#  backend:
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,18 +1,16 @@
-// AddressDTO.java
-package com.usermanagement.dto;
+// --- 📁 dto/AddressDTO.java ---
+package com.userservice.dto;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AddressDTO {
-    private String line1;
-    private String line2;
+    private Long id;              // ✅ Added
+    private String street;
     private String city;
     private String state;
-    private String zipCode;
-    private String country;
+    private String pincode;
 }

@@ -1,0 +1,7 @@
+spring:
+  profiles: dev
+  mail:
+    username: naveen.enjamuri22902@gmail.com
+    password: ytea rgbn ydhj rxpj
+#    username: your-email@gmail.com
+#    password: your-app-password

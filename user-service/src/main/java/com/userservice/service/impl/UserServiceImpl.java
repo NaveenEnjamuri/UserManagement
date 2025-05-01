@@ -1,274 +1,324 @@
-package com.usermanagement.service.impl;
+package com.userservice.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.usermanagement.config.RedisConfig;
-import com.usermanagement.converter.AddressConverter;
-import com.usermanagement.converter.UserConverter;
-import com.usermanagement.converter.UserProfileConverter;
-import com.usermanagement.dto.*;
-import com.usermanagement.entity.*;
-import com.usermanagement.enums.MessageType;
-import com.usermanagement.enums.RoleName;
-import com.usermanagement.exception.UserAlreadyExistsException;
-import com.usermanagement.exception.UserNotFoundException;
-import com.usermanagement.rabbitmq.RabbitMQPublisher;
-import com.usermanagement.repository.RoleRepository;
-import com.usermanagement.repository.UserRepository;
-import com.usermanagement.service.IUserService;
-
+import com.userservice.converter.AddressConverter;
+import com.userservice.converter.UserConverter;
+import com.userservice.dto.AddressDTO;
+import com.userservice.dto.NotificationRequest;
+import com.userservice.dto.UpdateProfileDTO;
+import com.userservice.dto.UserDTO;
+import com.userservice.entity.Address;
+import com.userservice.entity.User;
+import com.userservice.enums.MessageType;
+import com.userservice.exception.UserNotFoundException;
+import com.userservice.rabbitmq.RabbitMQPublisher;
+import com.userservice.repository.AddressRepository;
+import com.userservice.repository.UserRepository;
+import com.userservice.service.IUserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.Optional;
+//import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-
+    private final AddressRepository addressRepository;
     private final UserConverter userConverter;
-    private final UserProfileConverter userProfileConverter;
     private final AddressConverter addressConverter;
-
-    private final RabbitMQPublisher rabbitMQPublisher;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RabbitMQPublisher rabbitPublisher;
     private final PasswordEncoder passwordEncoder;
 
-    private static final String USERNAME_CACHE = "user::username::";
-    private static final String EMAIL_CACHE = "user::email::";
-    private static final Duration CACHE_TTL = Duration.ofMinutes(10);
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    // ====================== 1. Register User ============================
     @Override
     public UserDTO registerUser(UserDTO userDTO) {
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
-            throw new UserAlreadyExistsException("Username already exists");
-        }
-
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new UserAlreadyExistsException("Email already registered");
-        }
-
         User user = userConverter.toEntity(userDTO);
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user = userRepository.save(user);
 
-        // Assign default USER role
-        Role role = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
-        user.getRoles().add(role);
+        rabbitPublisher.sendNotification(new NotificationRequest(
+                user.getEmail(),
+                "Registration Successful",
+                "Welcome, " + user.getFullName(),
+                MessageType.REGISTRATION
+        ));
 
-        userRepository.save(user);
-
-        // Send registration success email
-        try {
-            NotificationRequest notification = new NotificationRequest(
-                    user.getEmail(), "Welcome to User Management!",
-                    "Hi " + user.getFullName() + ", your registration was successful.",
-                    MessageType.REGISTRATION
-            );
-            rabbitMQPublisher.publish(notification);
-        } catch (Exception e) {
-            log.error("Failed to send registration email: {}", e.getMessage());
-        }
-
-        return userConverter.toDto(user);
+        return userConverter.toDTO(user);
     }
 
-    // ====================== 2. Get User By Username ============================
     @Override
     public UserDTO getUserByUsername(String username) {
-        String redisKey = USERNAME_CACHE + username;
-        UserDTO cachedUser = (UserDTO) redisTemplate.opsForValue().get(redisKey);
-
-        if (cachedUser != null) {
-            return cachedUser;
-        }
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
-
-        UserDTO dto = userConverter.toDto(user);
-        redisTemplate.opsForValue().set(redisKey, dto, CACHE_TTL);
-        return dto;
+        return userConverter.toDTO(user);
     }
 
-    // ====================== 3. Get User By Email ============================
     @Override
     public UserDTO getUserByEmail(String email) {
-        String redisKey = EMAIL_CACHE + email;
-        UserDTO cachedUser = (UserDTO) redisTemplate.opsForValue().get(redisKey);
-
-        if (cachedUser != null) {
-            return cachedUser;
-        }
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-
-        UserDTO dto = userConverter.toDto(user);
-        redisTemplate.opsForValue().set(redisKey, dto, CACHE_TTL);
-        return dto;
+        return userConverter.toDTO(user);
     }
 
-    // ====================== 4. Get User Profile ============================
     @Override
-    public UserProfileDTO getUserProfile(String username) {
+    public UserDTO updateUserProfile(UpdateProfileDTO dto, String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found for profile view"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        return userProfileConverter.toDto(user.getUserProfile());
+        user.setFullName(dto.getFullName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+
+        User saved = userRepository.save(user);
+
+        rabbitPublisher.sendNotification(new NotificationRequest(
+                saved.getEmail(),
+                "Profile Updated",
+                "Hi " + saved.getFullName() + ", your profile was updated.",
+                MessageType.PROFILE_UPDATE
+        ));
+
+        return userConverter.toDTO(saved);
     }
 
-    // Continuing inside UserServiceImpl...
 
-    // ====================== 5. Update User Profile ============================
-    @Override
-    public UserDTO updateUserProfile(UserProfileDTO profileDTO, String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found to update profile"));
+//    @Override
+//    public UserDTO updateUserProfile(UserDTO updatedUser, String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("User not found"));
+//
+//        user.setFullName(updatedUser.getFullName());
+//        user.setEmail(updatedUser.getEmail());
+//        user.setPhone(updatedUser.getPhone());
+//
+//        User saved = userRepository.save(user);
+//
+//        rabbitPublisher.sendNotification(new NotificationRequest(
+//                saved.getEmail(),
+//                "Profile Updated",
+//                "Hi " + saved.getFullName() + ", your profile was updated.",
+//                MessageType.PROFILE_UPDATE
+//        ));
+//
+//        return userConverter.toDTO(saved);
+//    }
 
-        UserProfile profile = user.getUserProfile();
-        if (profile == null) {
-            profile = new UserProfile();
-            user.setUserProfile(profile);
-        }
-
-        userProfileConverter.updateEntity(profileDTO, profile);
-        User updatedUser = userRepository.save(user);
-
-        // Clear Redis cache
-        redisTemplate.delete(USERNAME_CACHE + username);
-        redisTemplate.delete(EMAIL_CACHE + updatedUser.getEmail());
-
-        return userConverter.toDto(updatedUser);
-    }
-
-    // ====================== 6. Delete User ============================
     @Override
     public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found to delete"));
-
         userRepository.deleteById(userId);
-
-        // Delete from cache
-        redisTemplate.delete(USERNAME_CACHE + user.getUsername());
-        redisTemplate.delete(EMAIL_CACHE + user.getEmail());
-
-        // Send deletion alert
-        try {
-            NotificationRequest notification = new NotificationRequest(
-                    user.getEmail(), "Account Deleted",
-                    "Dear " + user.getFullName() + ", your account has been deleted.",
-                    MessageType.ALERT
-            );
-            rabbitMQPublisher.publish(notification);
-        } catch (Exception e) {
-            log.error("Failed to send account deletion email: {}", e.getMessage());
-        }
     }
 
-    // ====================== 7. Get Address By Username ============================
     @Override
     public AddressDTO getAddressByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found to fetch address"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        Address address = addressRepository.findByUser(user)
+                .orElseThrow(() -> new UserNotFoundException("Address not found"));
 
-        Address address = user.getAddress();
-        if (address == null) {
-            throw new UserNotFoundException("No address found for user: " + username);
-        }
-
-        return addressConverter.toDto(address);
+        return addressConverter.toDTO(address);
     }
 
-    // ====================== 8. Update User Address ============================
     @Override
     public UserDTO updateUserAddress(AddressDTO addressDTO, String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found to update address"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Address address = user.getAddress();
-        if (address == null) {
-            address = new Address();
-            user.setAddress(address);
-        }
+        Address address = addressRepository.findByUser(user).orElse(new Address());
+        Address updated = addressConverter.toEntity(addressDTO);
+        updated.setUser(user);
+        addressRepository.save(updated);
 
-        addressConverter.updateEntity(addressDTO, address);
-        User updatedUser = userRepository.save(user);
-
-        // Clear Redis cache
-        redisTemplate.delete(USERNAME_CACHE + username);
-        redisTemplate.delete(EMAIL_CACHE + updatedUser.getEmail());
-
-        return userConverter.toDto(updatedUser);
+        return userConverter.toDTO(user);
     }
 
-
-    // ====================== 9. Forgot Password (Send Reset Email) ============================
     @Override
     public void forgotPassword(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found to send reset link"));
+                .orElseThrow(() -> new UserNotFoundException("Email not registered."));
 
-        String resetToken = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("resetToken::" + resetToken, user.getUsername(), Duration.ofMinutes(30));
+        String token = UUID.randomUUID().toString();
+//        String resetLink = "http://yourdomain.com/reset-password?token=" + token;
+        String resetLink = "http://localhost:8081/reset-password?token=" + token;
 
-        // Send reset password link
-        try {
-            String resetUrl = "http://yourapp.com/reset-password?token=" + resetToken;
-            NotificationRequest notification = new NotificationRequest(
-                    email, "Reset Your Password",
-                    "Click this link to reset your password: " + resetUrl,
-                    MessageType.RESET
-            );
-            rabbitMQPublisher.publish(notification);
-        } catch (Exception e) {
-            log.error("Failed to send reset password email: {}", e.getMessage());
-        }
+
+        rabbitPublisher.sendNotification(new NotificationRequest(
+                user.getEmail(),
+                "Reset Password",
+                "Click here to reset your password: " + resetLink,
+                MessageType.PASSWORD_RESET
+        ));
     }
 
-    // ====================== 10. Reset Password (Token Validation) ============================
     @Override
     public void resetPassword(String token, String newPassword) {
-        String redisKey = "resetToken::" + token;
-        String username = (String) redisTemplate.opsForValue().get(redisKey);
-
-        if (username == null) {
-            throw new RuntimeException("Reset token is invalid or expired");
-        }
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found for password reset"));
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-
-        redisTemplate.delete(redisKey);
-
-        try {
-            NotificationRequest notification = new NotificationRequest(
-                    user.getEmail(), "Password Changed",
-                    "Your password has been successfully updated.",
-                    MessageType.RESET_SUCCESS
-            );
-            rabbitMQPublisher.publish(notification);
-        } catch (Exception e) {
-            log.error("Failed to send password reset confirmation email: {}", e.getMessage());
-        }
+        // For demo purpose only: actual logic should validate token and retrieve user
+        System.out.println("Token received: " + token);
+        // TODO: implement actual logic using token lookup
     }
 }
 
-//}
+
+
+
+
+
+
+// --- ✅ service/impl/UserServiceImpl.java ---
+//package com.userservice.service.impl;
+//
+//import com.userservice.converter.AddressConverter;
+//import com.userservice.converter.UserConverter;
+//import com.userservice.converter.UserProfileConverter;
+//import com.userservice.dto.*;
+//import com.userservice.entity.Address;
+//import com.userservice.entity.User;
+//import com.userservice.enums.MessageType;
+//import com.userservice.exception.UserNotFoundException;
+//import com.userservice.rabbitmq.RabbitMQPublisher;
+//import com.userservice.repository.AddressRepository;
+//import com.userservice.repository.UserRepository;
+//import com.userservice.service.IUserService;
+//import lombok.RequiredArgsConstructor;
+//import org.springframework.cache.annotation.CacheEvict;
+//import org.springframework.cache.annotation.Cacheable;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.stereotype.Service;
+//
+//import java.util.UUID;
+//
+//@Service
+//@RequiredArgsConstructor
+//public class UserServiceImpl implements IUserService {
+//
+//    private final UserRepository userRepository;
+//    private final AddressRepository addressRepository;
+//    private final UserConverter userConverter;
+//    private final UserProfileConverter userProfileConverter;
+//    private final AddressConverter addressConverter;
+//    private final RabbitMQPublisher rabbitPublisher;
+//    private final PasswordEncoder passwordEncoder;
+//
+//    @Override
+//    public UserDTO registerUser(UserDTO userDTO) {
+//        User user = userConverter.toEntity(userDTO);
+//        user.setPassword(passwordEncoder.encode(user.getPassword()));
+//
+//        if (user.getAddress() != null) user.getAddress().setUser(user);
+//        if (user.getUserProfile() != null) user.getUserProfile().setUser(user);
+//
+//        user = userRepository.save(user);
+//
+//        rabbitPublisher.sendNotification(new NotificationRequest(
+//                user.getEmail(),
+//                "Registration Successful",
+//                "Welcome, " + user.getFullName(),
+//                MessageType.REGISTRATION
+//        ));
+//
+//        return userConverter.toDTO(user);
+//    }
+//
+//    @Override
+//    @Cacheable(value = "users", key = "#username")
+//    public UserDTO getUserByUsername(String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+//        return userConverter.toDTO(user);
+//    }
+//
+//    @Override
+//    public UserDTO getUserByEmail(String email) {
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+//        return userConverter.toDTO(user);
+//    }
+//
+//    @Override
+//    public UserProfileDTO getUserProfile(String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("Profile not found: " + username));
+//        return userProfileConverter.toDTO(user.getUserProfile());
+//    }
+//
+//    @Override
+//    @CacheEvict(value = "users", key = "#username")
+//    public UserDTO updateUserProfile(UserProfileDTO profileDTO, String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("User not found for update."));
+//
+//        user.setFullName(profileDTO.getFullName());
+//        user.setPhone(profileDTO.getPhone());
+//        user.setEmail(profileDTO.getEmail());
+//
+//        if (user.getUserProfile() == null) {
+//            user.setUserProfile(userProfileConverter.toEntity(profileDTO));
+//        } else {
+//            user.getUserProfile().setFullName(profileDTO.getFullName());
+//            user.getUserProfile().setEmail(profileDTO.getEmail());
+//            user.getUserProfile().setPhone(profileDTO.getPhone());
+//        }
+//
+//        user = userRepository.save(user);
+//
+//        rabbitPublisher.sendNotification(new NotificationRequest(
+//                user.getEmail(),
+//                "Profile Updated",
+//                "Hi, your profile was updated successfully.",
+//                MessageType.PROFILE_UPDATE
+//        ));
+//
+//        return userConverter.toDTO(user);
+//    }
+//
+//    @Override
+//    @CacheEvict(value = "users", allEntries = true)
+//    public void deleteUser(Long userId) {
+//        userRepository.deleteById(userId);
+//    }
+//
+//    @Override
+//    public AddressDTO getAddressByUsername(String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+//
+//        Address address = addressRepository.findByUser(user)
+//                .orElseThrow(() -> new UserNotFoundException("Address not found for user."));
+//
+//        return addressConverter.toDTO(address);
+//    }
+//
+//    @Override
+//    public UserDTO updateUserAddress(AddressDTO addressDTO, String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new UserNotFoundException("User not found."));
+//
+//        Address updated = addressConverter.toEntity(addressDTO);
+//        updated.setUser(user);
+//        addressRepository.save(updated);
+//
+//        return userConverter.toDTO(user);
+//    }
+//
+//    @Override
+//    public void forgotPassword(String email) {
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new UserNotFoundException("Email not registered."));
+//
+//        String token = UUID.randomUUID().toString();
+//        String resetLink = "http://yourdomain.com/reset-password?token=" + token;
+//
+//        rabbitPublisher.sendNotification(new NotificationRequest(
+//                user.getEmail(),
+//                "Reset Password",
+//                "Click here to reset your password: " + resetLink,
+//                MessageType.PASSWORD_RESET
+//        ));
+//    }
+//
+//    @Override
+//    public void resetPassword(String token, String newPassword) {
+//        System.out.println("Reset token used: " + token);
+//    }
+//} // End of UserServiceImpl

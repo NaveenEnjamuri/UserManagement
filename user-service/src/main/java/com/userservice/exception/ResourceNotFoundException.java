@@ -1,4 +1,4 @@
-package com.usermanagement.exception;
+package com.userservice.exception;
 
 public class ResourceNotFoundException extends ApiException {
 
