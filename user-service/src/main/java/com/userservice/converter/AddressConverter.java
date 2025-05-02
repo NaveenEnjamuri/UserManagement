@@ -11,7 +11,7 @@ public class AddressConverter {
         if (address == null) return null;
 
         return AddressDTO.builder()
-                .id(address.getId())
+//                .id(address.getId())
                 .street(address.getStreet())
                 .city(address.getCity())
                 .state(address.getState())
@@ -23,7 +23,7 @@ public class AddressConverter {
         if (dto == null) return null;
 
         return Address.builder()
-                .id(dto.getId())
+//                .id(dto.getId())
                 .street(dto.getStreet())
                 .city(dto.getCity())
                 .state(dto.getState())

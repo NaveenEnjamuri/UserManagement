@@ -12,6 +12,5 @@ import java.util.Optional;
 public interface AddressRepository extends JpaRepository<Address, Long> {
     Optional<Address> findByUser(User user);
 //    Optional<Address> findFirstByUser(User user);
-
 }
 

@@ -68,7 +68,8 @@ public class UserServiceTest {
                 .build();
 
         UserDTO saved = userService.registerUser(dto);
-        userService.deleteUser(saved.getId());
+//        userService.deleteUser(saved.getId());
+        userService.deleteUser(saved.getUsername());
         // The next line should throw an exception if user not found
         try {
             userService.getUserByUsername("deleteuser");

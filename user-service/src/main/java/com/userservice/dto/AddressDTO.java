@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class AddressDTO {
-    private Long id;              // ✅ Added
+//    private Long id;              // ✅ Added
     private String street;
     private String city;
     private String state;

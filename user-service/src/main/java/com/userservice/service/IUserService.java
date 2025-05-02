@@ -12,7 +12,8 @@ public interface IUserService {
 //    UserDTO updateUserProfile(UserDTO updatedUser, String username);
     UserDTO updateUserProfile(UpdateProfileDTO dto, String username);
 
-    void deleteUser(Long userId);
+//    void deleteUser(Long userId);
+    void deleteUser(String username);
     AddressDTO getAddressByUsername(String username);
     UserDTO updateUserAddress(AddressDTO addressDTO, String username);
     void forgotPassword(String email);

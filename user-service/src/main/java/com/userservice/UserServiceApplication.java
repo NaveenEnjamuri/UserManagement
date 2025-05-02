@@ -18,7 +18,7 @@ public class UserServiceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
-  // Testing for any failures to push to github
+  // Testing for any failures to push to GitHub
 }
 //Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyMSIsImlhdCI6MTY4...
 

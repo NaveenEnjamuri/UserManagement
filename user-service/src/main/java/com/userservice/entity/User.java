@@ -14,7 +14,6 @@
 // --- 📁 entity/User.java ---
 package com.userservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -25,18 +24,36 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Data
+@Table(name = "USER", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "email"),
+        @UniqueConstraint(columnNames = "username"),
+        @UniqueConstraint(columnNames = "phone_number") })
 public class User {
-    //public class User extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id", unique = true, nullable = false)
+    private Long Id;
+//    private Long userId;
 
+    @Column(name = "fullName", nullable = false)
     private String fullName;
+
+    @Column(name = "username", unique = true, nullable = false)
     private String username;
+
+    @Column(name = "password", nullable = false)
     private String password;
+
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
+
+    @Column(name = "phone_number", unique = true, nullable = false, length = 10)
     private String phone;
+
+    @Column(name = "active")
+    private boolean active = true;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Address address;
@@ -49,6 +66,7 @@ public class User {
     private Set<Role> roles;
 
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -118,33 +136,4 @@ public class User {
 
 
 
-//@NoArgsConstructor
-//@AllArgsConstructor
-//@Builder
-//public class User {
-//
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
-//
-//    @Column(unique = true, nullable = false)
-//    private String username; // login username
-//
-//    @Column(unique = true, nullable = false)
-//    private String email;
-//
-//    @Column(nullable = false)
-//    private String password;
-//
-//    private boolean enabled;
-//
-//    @ManyToMany(fetch = FetchType.EAGER)
-//    @JoinTable(
-//            name = "user_roles",
-//            joinColumns = @JoinColumn(name = "user_id"),
-//            inverseJoinColumns = @JoinColumn(name = "role_id"))
-//    private Set<Role> roles = new HashSet<>();
-//
-//    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-//    private UserProfile userProfile;
-//}
+

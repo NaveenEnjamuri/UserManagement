@@ -24,7 +24,7 @@ public class UserConverter {
         if (dto == null) return null;
 
         User user = User.builder()
-                .id(dto.getId())
+//                .id(dto.getId())
                 .fullName(dto.getFullName())
                 .username(dto.getUsername())
                 .email(dto.getEmail())
@@ -53,7 +53,7 @@ public class UserConverter {
         if (user == null) return null;
 
         return UserDTO.builder()
-                .id(user.getId())
+//                .id(user.getId())
                 .fullName(user.getFullName())
                 .username(user.getUsername())
                 .email(user.getEmail())

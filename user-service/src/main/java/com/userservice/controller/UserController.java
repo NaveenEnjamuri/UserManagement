@@ -43,18 +43,24 @@ public class UserController {
     @ApiOperation("Update user profile")
     public ResponseEntity<UserDTO> updateProfile(@PathVariable String username,
                                                  @RequestBody UpdateProfileDTO dto) {
-//    public ResponseEntity<UserDTO> updateProfile(@PathVariable String username,
-//                                                 @RequestBody UserDTO dto) {
+//    public ResponseEntity<UserDTO> updateProfile(@PathVariable String username, @RequestBody UserDTO dto) {
         return ResponseEntity.ok(userService.updateUserProfile(dto, username));
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation("Delete user by ID")
-    public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok("User deleted");
+    @ApiOperation("Soft delete user by username")
+    public ResponseEntity<String> deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
+        return ResponseEntity.ok("User soft-deleted");
     }
+//    @DeleteMapping("/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @ApiOperation("Delete user by ID")
+//    public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
+////        userService.deleteUser(userId);
+//        return ResponseEntity.ok("User deleted");
+//    }
 
     @GetMapping("/address/{username}")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
