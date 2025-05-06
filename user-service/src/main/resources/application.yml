@@ -1,3 +1,49 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  redis:
+    host: localhost
+    port: 6379
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+#    exchange: mail.exchange
+#    routing-key: mail.routingKey
+  application:
+    name: user-service
+mail:
+  exchange: notification.exchange
+  routingKey: notification.routing.key
+
+swagger:
+  base-package: com.usermanagement
+  title: User Service API
+  description: REST API for managing users
+  version: 1.0
+
+logging:
+  level:
+    org.springframework.amqp: DEBUG
+    com.userservice.rabbitmq: DEBUG
+
+
+
+
+
+
+
+
 #server:
 #  port: 8081
 #
@@ -39,50 +85,6 @@
 
 
 
-server:
-  port: 8081
-
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: 1230
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  redis:
-    host: localhost
-    port: 6379
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-#    exchange: mail.exchange
-#    routing-key: mail.routingKey
-  application:
-    name: user-service
-mail:
-  exchange: notification.exchange
-  routingKey: notification.routing.key
-
-swagger:
-  base-package: com.usermanagement
-  title: User Service API
-  description: REST API for managing users
-  version: 1.0
-
-logging:
-  level:
-    org.springframework.amqp: DEBUG
-    com.userservice.rabbitmq: DEBUG
-
-
-
-
-
-
 
 
 
@@ -106,7 +108,7 @@ logging:
 ##    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&serverTimezone=UTC
 #    url: jdbc:mysql://localhost:3306/userservice_db
 #    username: user
-#    password: 1234
+#    password: user
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #
 #  jpa:

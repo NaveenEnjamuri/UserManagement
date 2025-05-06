@@ -31,5 +31,4 @@ public class PasswordResetToken {
 
     public PasswordResetToken() {}
 
-
 }
