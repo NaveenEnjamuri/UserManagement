@@ -24,13 +24,23 @@ public class UserConverter {
         if (dto == null) return null;
 
         User user = User.builder()
-//                .id(dto.getId())
                 .fullName(dto.getFullName())
                 .username(dto.getUsername())
                 .email(dto.getEmail())
                 .password(dto.getPassword())
                 .phone(dto.getPhone())
+                .active(dto.isActive()) // ✅ add this line
                 .build();
+
+
+//        User user = User.builder()
+////                .id(dto.getId())
+//                .fullName(dto.getFullName())
+//                .username(dto.getUsername())
+//                .email(dto.getEmail())
+//                .password(dto.getPassword())
+//                .phone(dto.getPhone())
+//                .build();
 
         if (dto.getAddress() != null) {
             Address address = addressConverter.toEntity(dto.getAddress());
@@ -58,6 +68,7 @@ public class UserConverter {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .phone(user.getPhone())
+                .active(user.isActive()) // ✅ add this line if not present
                 .address(user.getAddress() != null ? addressConverter.toDTO(user.getAddress()) : null)
                 .roles(user.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toList()))
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)

@@ -1,3 +1,44 @@
+#server:
+#  port: 8081
+#
+#spring:
+#  datasource:
+#    url: ${DB_URL}
+#    username: ${DB_USERNAME}
+#    password: ${DB_PASSWORD}
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#  redis:
+#    host: ${REDIS_HOST}
+#    port: ${REDIS_PORT}
+#  rabbitmq:
+#    host: ${RABBIT_HOST}
+#    port: ${RABBIT_PORT}
+#    username: ${RABBIT_USERNAME}
+#    password: ${RABBIT_PASSWORD}
+#  application:
+#    name: user-service
+#
+#mail:
+#  exchange: ${MAIL_EXCHANGE}
+#  routingKey: ${MAIL_ROUTING_KEY}
+#
+#swagger:
+#  base-package: com.usermanagement
+#  title: User Service API
+#  description: REST API for managing users
+#  version: 1.0
+#
+#logging:
+#  level:
+#    org.springframework.amqp: DEBUG
+#    com.userservice.rabbitmq: DEBUG
+
+
+
+
 server:
   port: 8081
 
@@ -36,6 +77,19 @@ logging:
   level:
     org.springframework.amqp: DEBUG
     com.userservice.rabbitmq: DEBUG
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

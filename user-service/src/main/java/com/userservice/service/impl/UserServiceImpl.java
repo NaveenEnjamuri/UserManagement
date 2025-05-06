@@ -7,6 +7,7 @@ import com.userservice.dto.NotificationRequest;
 import com.userservice.dto.UpdateProfileDTO;
 import com.userservice.dto.UserDTO;
 import com.userservice.entity.Address;
+import com.userservice.entity.PasswordResetToken;
 import com.userservice.entity.User;
 import com.userservice.enums.MessageType;
 import com.userservice.exception.AddressNotFoundException;
@@ -14,13 +15,16 @@ import com.userservice.exception.UserAlreadyExistsException;
 import com.userservice.exception.UserNotFoundException;
 import com.userservice.rabbitmq.RabbitMQPublisher;
 import com.userservice.repository.AddressRepository;
+import com.userservice.repository.PasswordResetTokenRepository;
 import com.userservice.repository.UserRepository;
 import com.userservice.service.IUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 //import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -33,6 +37,10 @@ public class UserServiceImpl implements IUserService {
     private final AddressConverter addressConverter;
     private final RabbitMQPublisher rabbitPublisher;
     private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
+
 
     @Override
     public UserDTO registerUser(UserDTO userDTO) {
@@ -232,16 +240,15 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public void forgotPassword(String email) {
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new UserNotFoundException("Email not registered."));
         try {
             User user = userRepository.findByEmailAndActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException("Email not registered."));
 
             String token = UUID.randomUUID().toString();
-//        String resetLink = "http://yourdomain.com/reset-password?token=" + token;
-            String resetLink = "http://localhost:8081/reset-password?token=" + token;
+            PasswordResetToken resetToken = new PasswordResetToken(token, user);
+            tokenRepository.save(resetToken);
 
+            String resetLink = "http://localhost:8081/reset-password?token=" + token;
 
             rabbitPublisher.sendNotification(new NotificationRequest(
                     user.getEmail(),
@@ -256,8 +263,50 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        // For demo purpose only: actual logic should validate token and retrieve user
-        System.out.println("Token received: " + token);
-        // TODO: implement actual logic using token lookup
+        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token has expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        tokenRepository.delete(resetToken); // invalidate token
     }
+
+
+
+//    @Override
+//    public void forgotPassword(String email) {
+////        User user = userRepository.findByEmail(email)
+////                .orElseThrow(() -> new UserNotFoundException("Email not registered."));
+//        try {
+//            User user = userRepository.findByEmailAndActiveTrue(email)
+//                    .orElseThrow(() -> new UserNotFoundException("Email not registered."));
+//
+//            String token = UUID.randomUUID().toString();
+////        String resetLink = "http://yourdomain.com/reset-password?token=" + token;
+//            String resetLink = "http://localhost:8081/reset-password?token=" + token;
+//
+//
+//            rabbitPublisher.sendNotification(new NotificationRequest(
+//                    user.getEmail(),
+//                    "Reset Password",
+//                    "Click here to reset your password: " + resetLink,
+//                    MessageType.PASSWORD_RESET
+//            ));
+//        } catch (UserNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+//    @Override
+//    public void resetPassword(String token, String newPassword) {
+//        // For demo purpose only: actual logic should validate token and retrieve user
+//        System.out.println("Token received: " + token);
+//        // TODO: implement actual logic using token lookup
+//    }
 }

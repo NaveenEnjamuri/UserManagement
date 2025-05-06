@@ -19,6 +19,9 @@ public class UserDTO {
     @ApiModelProperty(hidden = true) // hides in Swagger
     private Long id;
 
+    private boolean active = true;
+
+
     @ApiModelProperty(value = "Full name of the user", example = "John Doe", required = true)
     @NotBlank(message = "Full name is required")
     private String fullName;
